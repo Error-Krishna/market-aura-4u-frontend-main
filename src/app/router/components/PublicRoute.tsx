@@ -1,9 +1,17 @@
-import type { ReactNode } from "react";
+import { Navigate, Outlet } from "react-router-dom";
 
-interface PublicRouteProps {
-  children: ReactNode;
-}
+import { useAuth } from "@/features/auth/hooks/use-auth";
 
-export function PublicRoute({ children }: PublicRouteProps) {
-  return children;
+export function PublicRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Outlet />;
 }
