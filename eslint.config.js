@@ -40,4 +40,13 @@ export default defineConfig([
       ],
     },
   },
+
+  // Router configuration exports a router object, not React components.
+  // Fast Refresh validation does not apply to this module.
+  {
+    files: ["src/app/router/routes.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
 ]);
