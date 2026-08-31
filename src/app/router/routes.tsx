@@ -6,8 +6,12 @@ import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
 import BillingPage from "@/pages/billing/BillingPage";
 import ContentPage from "@/pages/content/ContentPage";
+import ContentCreatePage from "@/pages/content/ContentCreatePage";
+import ContentDetailPage from "@/pages/content/ContentDetailPage";
 import OnboardingPage from "@/pages/onboarding/OnboardingPage";
 import HomePage from "@/pages/public/HomePage";
+import NotFoundPage from "@/pages/public/NotFoundPage";
+import SettingsPage from "@/pages/settings/SettingsPage";
 import SocialAccountsPage from "@/pages/social/SocialAccountsPage";
 
 import AppLayout from "@/layouts/AppLayout";
@@ -86,6 +90,14 @@ export const router = createBrowserRouter([
             element: <ContentPage />,
           },
           {
+            path: "/content/create",
+            element: <ContentCreatePage />,
+          },
+          {
+            path: "/content/:jobId",
+            element: <ContentDetailPage />,
+          },
+          {
             path: "/social",
             element: <SocialAccountsPage />,
           },
@@ -97,8 +109,17 @@ export const router = createBrowserRouter([
             path: "/account",
             element: <AccountPage />,
           },
+          {
+            path: "/settings",
+            element: <SettingsPage />,
+          },
         ],
       },
     ],
+  },
+  {
+    errorElement: <RouteErrorBoundary />,
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);
