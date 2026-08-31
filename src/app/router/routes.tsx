@@ -1,42 +1,51 @@
-import { lazy } from "react";
+import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 
+import AuthLayout from "@/layouts/AuthLayout";
 import PublicLayout from "@/layouts/PublicLayout";
-
-import { LazyPage } from "./components/LazyPage";
-import { PublicRoute } from "./components/PublicRoute";
-import { RouteErrorBoundary } from "./components/RouteErrorBoundary";
 
 const HomePage = lazy(() => import("@/pages/public/HomePage"));
 const NotFoundPage = lazy(() => import("@/pages/public/NotFoundPage"));
+const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
+const SignupPage = lazy(() => import("@/pages/auth/SignupPage"));
+
+function PageLoading() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center">
+      <div className="size-5 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-primary)]" />
+    </div>
+  );
+}
+
+function lazyElement(element: React.ReactNode) {
+  return <Suspense fallback={<PageLoading />}>{element}</Suspense>;
+}
 
 export const router = createBrowserRouter([
   {
-    errorElement: <RouteErrorBoundary />,
     element: <PublicLayout />,
     children: [
       {
-        element: <PublicRoute />,
-        children: [
-          {
-            path: "/",
-            element: (
-              <LazyPage>
-                <HomePage />
-              </LazyPage>
-            ),
-          },
-        ],
+        path: "/",
+        element: lazyElement(<HomePage />),
       },
     ],
   },
   {
-    errorElement: <RouteErrorBoundary />,
+    element: <AuthLayout />,
+    children: [
+      {
+        path: "/login",
+        element: lazyElement(<LoginPage />),
+      },
+      {
+        path: "/signup",
+        element: lazyElement(<SignupPage />),
+      },
+    ],
+  },
+  {
     path: "*",
-    element: (
-      <LazyPage>
-        <NotFoundPage />
-      </LazyPage>
-    ),
+    element: lazyElement(<NotFoundPage />),
   },
 ]);
