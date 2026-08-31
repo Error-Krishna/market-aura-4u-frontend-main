@@ -5,6 +5,7 @@ import { RouterProvider } from "react-router-dom";
 import { QueryProvider } from "./app/providers/QueryProvider";
 import { AuthProvider } from "./features/auth/components/AuthProvider";
 import { router } from "./app/router";
+import { Toaster } from "./components/feedback/Toaster";
 
 import "@/styles/globals.css";
 import "@/styles/tokens.css";
@@ -14,6 +15,7 @@ createRoot(document.getElementById("root")!).render(
     <QueryProvider>
       <AuthProvider>
         <RouterProvider router={router} />
+        <Toaster />
       </AuthProvider>
     </QueryProvider>
   </StrictMode>,
