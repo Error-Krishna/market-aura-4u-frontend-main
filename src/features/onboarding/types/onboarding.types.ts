@@ -1,0 +1,49 @@
+export const ONBOARDING_PLATFORMS = [
+  "twitter",
+  "linkedin",
+  "instagram",
+  "facebook",
+  "email",
+  "blog",
+] as const;
+
+export type OnboardingPlatform = (typeof ONBOARDING_PLATFORMS)[number];
+
+export interface OnboardingRequest {
+  companyName: string;
+  industry: string;
+  brandTone: string;
+  uvp: string;
+  targetAudience: string;
+  platforms: OnboardingPlatform[];
+}
+
+export interface OnboardingUser {
+  id: string;
+  name?: string;
+  email: string;
+  onboardingCompleted: boolean;
+  isPremium: boolean;
+  credits: {
+    monthly: number;
+    used: number;
+  };
+  brandProfile: {
+    companyName: string;
+    industry: string;
+    uvp: string;
+    targetAudience: string;
+    marketingGoal: string;
+    brandVoice: {
+      tone: string;
+      description: string;
+    };
+    platforms: OnboardingPlatform[];
+  };
+}
+
+export interface OnboardingResponse {
+  success: boolean;
+  message: string;
+  user: OnboardingUser;
+}

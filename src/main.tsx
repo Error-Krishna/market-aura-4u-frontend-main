@@ -6,7 +6,6 @@ import { QueryProvider } from "./app/providers/QueryProvider";
 import { AuthProvider } from "./features/auth/components/AuthProvider";
 import { router } from "./app/router";
 
-import "./index.css";
 import "@/styles/globals.css";
 import "@/styles/tokens.css";
 
