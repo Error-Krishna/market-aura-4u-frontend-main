@@ -1,8 +1,9 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { createBrowserRouter } from "react-router-dom";
 
-import AuthLayout from "@/layouts/AuthLayout";
 import AppLayout from "@/layouts/AppLayout";
+import AuthLayout from "@/layouts/AuthLayout";
+import OnboardingLayout from "@/layouts/OnboardingLayout";
 import PublicLayout from "@/layouts/PublicLayout";
 
 const HomePage = lazy(() => import("@/pages/public/HomePage"));
@@ -10,6 +11,7 @@ const NotFoundPage = lazy(() => import("@/pages/public/NotFoundPage"));
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const SignupPage = lazy(() => import("@/pages/auth/SignupPage"));
 const DashboardPage = lazy(() => import("@/pages/app/DashboardPage"));
+const OnboardingPage = lazy(() => import("@/pages/onboarding/OnboardingPage"));
 
 function PageLoading() {
   return (
@@ -19,7 +21,7 @@ function PageLoading() {
   );
 }
 
-function lazyElement(element: React.ReactNode) {
+function lazyElement(element: ReactNode) {
   return <Suspense fallback={<PageLoading />}>{element}</Suspense>;
 }
 
@@ -47,11 +49,11 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    element: <AppLayout />,
+    element: <OnboardingLayout />,
     children: [
       {
-        path: "/dashboard",
-        element: lazyElement(<DashboardPage />),
+        path: "/onboarding",
+        element: lazyElement(<OnboardingPage />),
       },
     ],
   },
