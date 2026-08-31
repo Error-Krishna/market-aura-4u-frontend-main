@@ -2,12 +2,14 @@ import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 
 import AuthLayout from "@/layouts/AuthLayout";
+import AppLayout from "@/layouts/AppLayout";
 import PublicLayout from "@/layouts/PublicLayout";
 
 const HomePage = lazy(() => import("@/pages/public/HomePage"));
 const NotFoundPage = lazy(() => import("@/pages/public/NotFoundPage"));
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const SignupPage = lazy(() => import("@/pages/auth/SignupPage"));
+const DashboardPage = lazy(() => import("@/pages/app/DashboardPage"));
 
 function PageLoading() {
   return (
@@ -41,6 +43,24 @@ export const router = createBrowserRouter([
       {
         path: "/signup",
         element: lazyElement(<SignupPage />),
+      },
+    ],
+  },
+  {
+    element: <AppLayout />,
+    children: [
+      {
+        path: "/dashboard",
+        element: lazyElement(<DashboardPage />),
+      },
+    ],
+  },
+  {
+    element: <AppLayout />,
+    children: [
+      {
+        path: "/dashboard",
+        element: lazyElement(<DashboardPage />),
       },
     ],
   },
