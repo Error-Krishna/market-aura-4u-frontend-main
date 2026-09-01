@@ -10,11 +10,19 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PublicRoute } from "./components/PublicRoute";
 import { OnboardingRoute } from "./components/OnboardingRoute";
 
+// Lazy pages
 const HomePage = lazy(() => import("@/pages/public/HomePage"));
 const NotFoundPage = lazy(() => import("@/pages/public/NotFoundPage"));
+
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const SignupPage = lazy(() => import("@/pages/auth/SignupPage"));
+
 const DashboardPage = lazy(() => import("@/pages/app/DashboardPage"));
+const CreateContentPage = lazy(() => import("@/pages/app/CreateContentPage"));
+const ContentHistoryPage = lazy(() => import("@/pages/app/ContentHistoryPage"));
+const BillingPage = lazy(() => import("@/pages/app/BillingPage"));
+const SocialAccountsPage = lazy(() => import("@/pages/app/SocialAccountsPage"));
+
 const OnboardingPage = lazy(() => import("@/pages/onboarding/OnboardingPage"));
 
 function PageLoading() {
@@ -30,20 +38,22 @@ function lazyElement(element: React.ReactNode) {
 }
 
 export const router = createBrowserRouter([
+  // ============================================================
+  // PUBLIC ROUTES
+  // ============================================================
   {
     element: <PublicRoute />,
     children: [
       {
         element: <PublicLayout />,
-        children: [
-          {
-            path: "/",
-            element: lazyElement(<HomePage />),
-          },
-        ],
+        children: [{ path: "/", element: lazyElement(<HomePage />) }],
       },
     ],
   },
+
+  // ============================================================
+  // AUTH ROUTES
+  // ============================================================
   {
     element: <PublicRoute />,
     children: [
@@ -62,9 +72,19 @@ export const router = createBrowserRouter([
       },
     ],
   },
+
+  // ============================================================
+  // PROTECTED ROUTES
+  // Authentication is required for everything below.
+  // ============================================================
   {
     element: <ProtectedRoute />,
     children: [
+      // ----------------------------------------------------------
+      // ONBOARDING
+      //
+      // Only incomplete users can access /onboarding.
+      // ----------------------------------------------------------
       {
         element: <OnboardingRoute />,
         children: [
@@ -79,6 +99,16 @@ export const router = createBrowserRouter([
           },
         ],
       },
+
+      // ----------------------------------------------------------
+      // MAIN APPLICATION
+      //
+      // IMPORTANT:
+      // AppLayout is NOT wrapped by OnboardingRoute.
+      //
+      // This allows incomplete users to enter the application
+      // and see the onboarding banner.
+      // ----------------------------------------------------------
       {
         element: <AppLayout />,
         children: [
@@ -86,10 +116,30 @@ export const router = createBrowserRouter([
             path: "/dashboard",
             element: lazyElement(<DashboardPage />),
           },
+          {
+            path: "/content/create",
+            element: lazyElement(<CreateContentPage />),
+          },
+          {
+            path: "/content/history",
+            element: lazyElement(<ContentHistoryPage />),
+          },
+          {
+            path: "/billing",
+            element: lazyElement(<BillingPage />),
+          },
+          {
+            path: "/social-accounts",
+            element: lazyElement(<SocialAccountsPage />),
+          },
         ],
       },
     ],
   },
+
+  // ============================================================
+  // FALLBACK
+  // ============================================================
   {
     path: "*",
     element: lazyElement(<NotFoundPage />),

@@ -19,11 +19,9 @@ export interface OnboardingRequest {
 }
 
 export interface OnboardingResponse {
-  success: boolean;
   message: string;
-  user: {
-    _id: string;
-    email: string;
+  status: number;
+  data: {
     onboardingCompleted: boolean;
   };
 }

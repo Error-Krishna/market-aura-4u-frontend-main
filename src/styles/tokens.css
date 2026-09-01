@@ -1,25 +1,34 @@
 :root {
-  --color-primary: #f93e6c;
-  --color-primary-hover: #e93662;
-  --color-primary-soft: #fde8ee;
+  /* Brand Colors */
+  --color-primary: #6c3ce1;
+  --color-primary-soft: rgba(108, 60, 225, 0.12);
+  --color-primary-gradient: linear-gradient(135deg, #6c3ce1, #f97316);
+  --color-secondary: #2dd4bf;
+  --color-secondary-soft: rgba(45, 212, 191, 0.12);
 
-  --color-secondary: #0f1524;
-  --color-secondary-hover: #181f32;
+  /* Background & Surface */
+  --color-background: #0b0a0f;
+  --color-surface: rgba(255, 255, 255, 0.04);
+  --color-surface-bright: rgba(255, 255, 255, 0.06);
+  --color-surface-muted: rgba(255, 255, 255, 0.02);
+  --color-border: rgba(255, 255, 255, 0.08);
 
-  --color-background: #fdf9f8;
-  --color-surface: #fbf6f4;
-  --color-surface-bright: #fefdfb;
-  --color-surface-muted: #f9f2ef;
+  /* Text */
+  --color-text: #f1f0f5;
+  --color-text-secondary: #b2b0c0;
+  --color-text-muted: #6f6c82;
 
-  --color-text: #181b29;
-  --color-text-secondary: #525159;
-  --color-text-muted: #7e7d82;
+  /* Status */
+  --color-success: #2dd4bf;
+  --color-danger: #f87171;
+  --color-danger-soft: rgba(248, 113, 113, 0.12);
 
-  --color-border: #dfdddc;
-  --color-border-strong: #ceced0;
+  /* Glass */
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-blur: blur(12px);
 
-  --color-success: #3faf72;
-  --color-warning: #e8a52a;
-  --color-danger: #e94b68;
-  --color-info: #3f84ce;
+  /* Spacing */
+  --spacing: 0.25rem;
+  --radius: 1rem;
 }

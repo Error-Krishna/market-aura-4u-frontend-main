@@ -1,8 +1,4 @@
-export { completeOnboarding } from "./api/onboarding-api";
 export { useOnboarding } from "./hooks/use-onboarding";
-export {
-  ONBOARDING_PLATFORMS,
-  type OnboardingPlatform,
-  type OnboardingRequest,
-  type OnboardingResponse,
-} from "./types/onboarding.types";
+export * from "./types/onboarding.types";
+export * from "./schemas/onboarding.schemas";
+export { OnboardingStepper } from "./components/OnboardingStepper";

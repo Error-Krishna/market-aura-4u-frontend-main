@@ -1,7 +1,9 @@
 export interface AuthUser {
   id: string;
   email: string;
+  name?: string;
   isOnboarded: boolean;
+  isPremium?: boolean; // add this
 }
 
 export interface LoginRequest {
@@ -18,41 +20,29 @@ export interface AuthResponse {
   message: string;
   status: number;
   token: string;
-  data: AuthUser;
-}
-
-export interface ProfileResponse {
-  success: boolean;
-  data: {
-    id: string;
-    isOnboarded: boolean;
-    isUserPremium: boolean;
-    joinedAt: string;
-    name?: string;
-    email: string;
-    credits: {
-      total: number;
-      used: number;
-      remaining: number;
-    };
-    companyName: string;
-    industry: string;
-    targetAudience: unknown;
-    marketingGoal: string;
-    brandVoice: {
-      tone: string;
-      description: string;
-    };
-    platforms: string[];
+  data: AuthUser & {
+    credits?: { remaining: number; used: number; total: number };
+    companyName?: string;
+    industry?: string;
+    brandVoice?: { tone: string };
+    marketingGoal?: string;
+    platforms?: string[];
+    isUserPremium?: boolean;
   };
 }
 
-export interface AuthContextValue {
-  user: AuthUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (request: LoginRequest) => Promise<AuthUser>;
-  signup: (request: SignupRequest) => Promise<AuthUser>;
-  logout: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+export interface ProfileResponse {
+  message: string;
+  status: number;
+  data: AuthUser & {
+    name?: string;
+    companyName?: string;
+    industry?: string;
+    brandVoice: { tone: string; description?: string };
+    marketingGoal?: string;
+    platforms: string[];
+    credits: { remaining: number; used: number; total: number };
+    isUserPremium: boolean;
+    onboardingCompleted: boolean;
+  };
 }

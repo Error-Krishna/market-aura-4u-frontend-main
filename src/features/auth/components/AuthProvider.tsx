@@ -20,8 +20,20 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
-  const [isLoading, setIsLoading] = useState(() => Boolean(localStorage.getItem(TOKEN_KEY)));
+  const [isLoading, setIsLoading] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
 
+    return Boolean(localStorage.getItem(TOKEN_KEY));
+  });
+
+  /**
+   * Fetch the authenticated user's latest profile.
+   *
+   * This is important because onboarding status can change
+   * after the user completes onboarding.
+   */
   const refreshProfile = useCallback(async () => {
     try {
       const response = await getProfile();
@@ -30,13 +42,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         id: response.data.id,
         email: response.data.email,
         isOnboarded: response.data.isOnboarded,
+        isPremium: response.data.isPremium,
       });
-    } catch {
+    } catch (error) {
+      console.error("Failed to refresh authentication profile:", error);
+
       setUser(null);
       localStorage.removeItem(TOKEN_KEY);
     }
   }, []);
 
+  /**
+   * Restore authentication state when the application starts.
+   */
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
 
@@ -44,32 +62,74 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
+    let isMounted = true;
+
     const initializeAuth = async () => {
-      await refreshProfile();
-      setIsLoading(false);
+      try {
+        await refreshProfile();
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     };
 
     void initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, [refreshProfile]);
 
+  /**
+   * Login.
+   */
   const login = useCallback(async (request: LoginRequest) => {
     const response = await loginRequest(request);
 
     localStorage.setItem(TOKEN_KEY, response.token);
-    setUser(response.data);
 
-    return response.data;
+    setUser({
+      id: response.data.id,
+      email: response.data.email,
+      isOnboarded: response.data.isOnboarded,
+      isPremium: response.data.isPremium,
+    });
+
+    return {
+      id: response.data.id,
+      email: response.data.email,
+      isOnboarded: response.data.isOnboarded,
+      isPremium: response.data.isPremium,
+    };
   }, []);
 
+  /**
+   * Signup.
+   */
   const signup = useCallback(async (request: SignupRequest) => {
     const response = await signupRequest(request);
 
     localStorage.setItem(TOKEN_KEY, response.token);
-    setUser(response.data);
 
-    return response.data;
+    setUser({
+      id: response.data.id,
+      email: response.data.email,
+      isOnboarded: response.data.isOnboarded,
+      isPremium: response.data.isPremium,
+    });
+
+    return {
+      id: response.data.id,
+      email: response.data.email,
+      isOnboarded: response.data.isOnboarded,
+      isPremium: response.data.isPremium,
+    };
   }, []);
 
+  /**
+   * Logout.
+   */
   const logout = useCallback(async () => {
     try {
       await logoutRequest();

@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check } from "lucide-react";
-import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { Check } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/Button";
-import { useAuth } from "@/features/auth/hooks/use-auth";
-import { useOnboarding } from "@/features/onboarding/hooks/use-onboarding";
+import { useAuth } from "@/features/auth";
+import { useOnboarding } from "@/features/onboarding";
+import { OnboardingStepper } from "@/features/onboarding";
 import {
   ONBOARDING_PLATFORMS,
   type OnboardingPlatform,
@@ -26,18 +28,22 @@ const platformLabels: Record<OnboardingPlatform, string> = {
   blog: "Blog",
 };
 
+const STEPS = ["Business Info", "Audience & Positioning", "Platforms"];
+
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const { refreshProfile } = useAuth();
   const onboarding = useOnboarding();
+  const [step, setStep] = useState(1);
   const [serverError, setServerError] = useState("");
 
   const {
     register,
     handleSubmit,
     setValue,
-    control,
     formState: { errors },
+    trigger,
+    getValues,
   } = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
@@ -48,182 +54,179 @@ export default function OnboardingPage() {
       targetAudience: "",
       platforms: [],
     },
+    mode: "onChange",
   });
 
-  const platforms = useWatch({
-    control,
-    name: "platforms",
-  });
+  const platforms = getValues("platforms");
 
   const togglePlatform = (platform: OnboardingPlatform) => {
-    const nextPlatforms = platforms.includes(platform)
-      ? platforms.filter((item) => item !== platform)
-      : [...platforms, platform];
-
-    setValue("platforms", nextPlatforms, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+    const current = (platforms as OnboardingPlatform[]) || [];
+    const next = current.includes(platform)
+      ? current.filter((p) => p !== platform)
+      : [...current, platform];
+    setValue("platforms", next, { shouldValidate: true });
   };
 
+  const nextStep = async () => {
+    let fields: (keyof OnboardingFormData)[] = [];
+    if (step === 1) fields = ["companyName", "industry", "brandTone"];
+    else if (step === 2) fields = ["uvp", "targetAudience"];
+    else if (step === 3) fields = ["platforms"];
+
+    const isValid = await trigger(fields);
+    if (isValid) {
+      setStep((s) => Math.min(s + 1, 3));
+    }
+  };
+
+  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
+  const [searchParams] = useSearchParams();
+  const instagramSuccess = searchParams.get("instagramSuccess") === "true";
   const onSubmit = async (data: OnboardingFormData) => {
     setServerError("");
-
     try {
       await onboarding.mutateAsync(data);
-
-      // Re-read the real user profile from the backend.
       await refreshProfile();
-
       navigate("/dashboard", { replace: true });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to complete onboarding.";
-
-      setServerError(message);
+      setServerError(error instanceof Error ? error.message : "Unable to complete onboarding.");
     }
   };
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-3xl">
-        <div className="mb-8">
-          <p className="text-sm font-semibold text-primary">Market Aura</p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-text sm:text-4xl">
-            Set up your brand
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
-            Tell us about your business so generated content can use your real brand information.
-          </p>
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
+      <div className="w-full max-w-2xl">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight">Set up your brand</h1>
+          <p className="mt-2 text-text-secondary">Tell us about your business.</p>
+        </div>
+
+        <div className="mt-8 flex justify-center">
+          <OnboardingStepper currentStep={step} totalSteps={3} />
+        </div>
+
+        <div className="mt-6 text-center text-sm font-medium text-text-muted">
+          Step {step} of 3: {STEPS[step - 1]}
         </div>
 
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="space-y-6 rounded-2xl border border-border bg-surface-bright p-5 shadow-sm sm:p-8"
+          className="mt-6 glass-card rounded-2xl bg-surface/40 p-8 backdrop-blur-sm"
         >
-          <section className="space-y-5">
-            <div>
-              <h2 className="text-base font-semibold text-text">Business information</h2>
-              <p className="mt-1 text-sm text-text-secondary">
-                These values are saved to your account.
-              </p>
+          {instagramSuccess && (
+            <div className="rounded-xl border border-success/30 bg-success/10 p-4 text-sm text-success">
+              ✅ Instagram account connected successfully! Complete the rest of your profile below.
             </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-text">Company name</span>
+          )}
+          {step === 1 && (
+            <div className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-medium">Company name</label>
                 <input
                   {...register("companyName")}
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="w-full rounded-xl border border-border/50 bg-background/50 px-4 py-3 text-sm backdrop-blur-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
                 {errors.companyName && (
-                  <span className="text-xs text-danger">{errors.companyName.message}</span>
+                  <p className="mt-1 text-sm text-danger">{errors.companyName.message}</p>
                 )}
-              </label>
-
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-text">Industry</span>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium">Industry</label>
                 <input
                   {...register("industry")}
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="w-full rounded-xl border border-border/50 bg-background/50 px-4 py-3 text-sm backdrop-blur-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
                 {errors.industry && (
-                  <span className="text-xs text-danger">{errors.industry.message}</span>
+                  <p className="mt-1 text-sm text-danger">{errors.industry.message}</p>
                 )}
-              </label>
-
-              <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm font-medium text-text">Brand tone</span>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium">Brand Tone</label>
                 <input
                   {...register("brandTone")}
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="w-full rounded-xl border border-border/50 bg-background/50 px-4 py-3 text-sm backdrop-blur-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
                 {errors.brandTone && (
-                  <span className="text-xs text-danger">{errors.brandTone.message}</span>
+                  <p className="mt-1 text-sm text-danger">{errors.brandTone.message}</p>
                 )}
-              </label>
+              </div>
             </div>
-          </section>
+          )}
 
-          <section className="space-y-5 border-t border-border pt-6">
+          {step === 2 && (
+            <div className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-medium">Unique Value Proposition</label>
+                <textarea
+                  {...register("uvp")}
+                  rows={4}
+                  className="w-full rounded-xl border border-border/50 bg-background/50 px-4 py-3 text-sm backdrop-blur-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                {errors.uvp && <p className="mt-1 text-sm text-danger">{errors.uvp.message}</p>}
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium">Target Audience</label>
+                <textarea
+                  {...register("targetAudience")}
+                  rows={4}
+                  className="w-full rounded-xl border border-border/50 bg-background/50 px-4 py-3 text-sm backdrop-blur-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                {errors.targetAudience && (
+                  <p className="mt-1 text-sm text-danger">{errors.targetAudience.message}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
             <div>
-              <h2 className="text-base font-semibold text-text">Your audience and positioning</h2>
-            </div>
-
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-text">Unique value proposition</span>
-              <textarea
-                {...register("uvp")}
-                rows={4}
-                className="w-full resize-y rounded-xl border border-border bg-background px-3 py-3 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-              />
-              {errors.uvp && <span className="text-xs text-danger">{errors.uvp.message}</span>}
-            </label>
-
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-text">Target audience</span>
-              <textarea
-                {...register("targetAudience")}
-                rows={4}
-                className="w-full resize-y rounded-xl border border-border bg-background px-3 py-3 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-              />
-              {errors.targetAudience && (
-                <span className="text-xs text-danger">{errors.targetAudience.message}</span>
+              <label className="mb-3 block text-sm font-medium">Select Platforms</label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {ONBOARDING_PLATFORMS.map((platform) => {
+                  const selected = platforms?.includes(platform) || false;
+                  return (
+                    <button
+                      key={platform}
+                      type="button"
+                      onClick={() => togglePlatform(platform)}
+                      className={cn(
+                        "flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-medium transition",
+                        selected
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border/50 bg-background/30 text-text-secondary hover:bg-background/50",
+                      )}
+                    >
+                      {platformLabels[platform]}
+                      {selected && <Check className="size-4" />}
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.platforms && (
+                <p className="mt-2 text-sm text-danger">{errors.platforms.message}</p>
               )}
-            </label>
-          </section>
-
-          <section className="border-t border-border pt-6">
-            <div>
-              <h2 className="text-base font-semibold text-text">Content platforms</h2>
-              <p className="mt-1 text-sm text-text-secondary">Select where you plan to publish.</p>
             </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {ONBOARDING_PLATFORMS.map((platform) => {
-                const selected = platforms.includes(platform);
-
-                return (
-                  <button
-                    key={platform}
-                    type="button"
-                    onClick={() => togglePlatform(platform)}
-                    className={cn(
-                      "flex min-h-12 items-center justify-between rounded-xl border px-4 text-left text-sm font-medium transition",
-                      selected
-                        ? "border-primary bg-primary-soft text-primary"
-                        : "border-border bg-background text-text-secondary hover:border-border-strong hover:text-text",
-                    )}
-                  >
-                    {platformLabels[platform]}
-
-                    {selected && (
-                      <span className="flex size-5 items-center justify-center rounded-full bg-primary text-white">
-                        <Check className="size-3" />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {errors.platforms && (
-              <p className="mt-2 text-xs text-danger">{errors.platforms.message}</p>
-            )}
-          </section>
+          )}
 
           {serverError && (
-            <div
-              role="alert"
-              className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger"
-            >
+            <div className="mt-4 rounded-xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
               {serverError}
             </div>
           )}
 
-          <div className="flex justify-end border-t border-border pt-6">
-            <Button type="submit" size="lg" isLoading={onboarding.isPending}>
-              Complete setup
+          <div className="mt-8 flex justify-between">
+            <Button type="button" variant="outline" onClick={prevStep} disabled={step === 1}>
+              Back
             </Button>
+            {step === 3 ? (
+              <Button type="submit" isLoading={onboarding.isPending}>
+                Complete Setup
+              </Button>
+            ) : (
+              <Button type="button" onClick={nextStep}>
+                Next
+              </Button>
+            )}
           </div>
         </form>
       </div>
