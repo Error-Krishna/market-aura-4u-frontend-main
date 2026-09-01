@@ -1,74 +1,232 @@
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Check } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/Button";
-import { Container } from "@/components/ui/Container";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useOnboarding } from "@/features/onboarding/hooks/use-onboarding";
+import {
+  ONBOARDING_PLATFORMS,
+  type OnboardingPlatform,
+} from "@/features/onboarding/types/onboarding.types";
+import {
+  onboardingSchema,
+  type OnboardingFormData,
+} from "@/features/onboarding/schemas/onboarding.schemas";
+import { cn } from "@/lib/utils/cn";
+
+const platformLabels: Record<OnboardingPlatform, string> = {
+  twitter: "Twitter / X",
+  linkedin: "LinkedIn",
+  instagram: "Instagram",
+  facebook: "Facebook",
+  email: "Email",
+  blog: "Blog",
+};
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState(1);
+  const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
+  const onboarding = useOnboarding();
+  const [serverError, setServerError] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    control,
+    formState: { errors },
+  } = useForm<OnboardingFormData>({
+    resolver: zodResolver(onboardingSchema),
+    defaultValues: {
+      companyName: "",
+      industry: "",
+      brandTone: "",
+      uvp: "",
+      targetAudience: "",
+      platforms: [],
+    },
+  });
+
+  const platforms = useWatch({
+    control,
+    name: "platforms",
+  });
+
+  const togglePlatform = (platform: OnboardingPlatform) => {
+    const nextPlatforms = platforms.includes(platform)
+      ? platforms.filter((item) => item !== platform)
+      : [...platforms, platform];
+
+    setValue("platforms", nextPlatforms, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const onSubmit = async (data: OnboardingFormData) => {
+    setServerError("");
+
+    try {
+      await onboarding.mutateAsync(data);
+
+      // Re-read the real user profile from the backend.
+      await refreshProfile();
+
+      navigate("/dashboard", { replace: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to complete onboarding.";
+
+      setServerError(message);
+    }
+  };
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-bright)]">
-        <Container className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-[var(--color-secondary)] text-sm font-bold text-white">
-              M
-            </div>
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-3xl">
+        <div className="mb-8">
+          <p className="text-sm font-semibold text-primary">Market Aura</p>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-text sm:text-4xl">
+            Set up your brand
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
+            Tell us about your business so generated content can use your real brand information.
+          </p>
+        </div>
 
-            <span className="text-sm font-semibold">Market Aura</span>
-          </div>
-
-          <span className="text-sm text-[var(--color-text-muted)]">Step {step} of 1</span>
-        </Container>
-      </header>
-
-      <Container className="flex min-h-[calc(100vh-4rem)] items-center justify-center py-10">
-        <section className="w-full max-w-2xl">
-          <div className="mb-8">
-            <p className="mb-2 text-sm font-semibold text-[var(--color-primary)]">Get started</p>
-
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Set up your workspace</h1>
-
-            <p className="mt-3 max-w-xl text-[var(--color-text-secondary)]">
-              Tell us about your business so Market Aura can personalize your content workflow.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-bright)] p-5 shadow-sm sm:p-8">
-            <div className="mb-8">
-              <div className="mb-2 flex items-center justify-between text-xs">
-                <span className="font-medium text-[var(--color-text)]">Getting started</span>
-
-                <span className="text-[var(--color-text-muted)]">1 / 1</span>
-              </div>
-
-              <div className="h-1.5 overflow-hidden rounded-full bg-[var(--color-surface-muted)]">
-                <div className="h-full w-full rounded-full bg-[var(--color-primary)]" />
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)] p-6 sm:p-8">
-              <h2 className="text-lg font-semibold">Onboarding configuration</h2>
-
-              <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-                The onboarding API contract is not currently present in the frontend project. We
-                will connect the actual fields here as soon as that backend contract is restored.
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6 rounded-2xl border border-border bg-surface-bright p-5 shadow-sm sm:p-8"
+        >
+          <section className="space-y-5">
+            <div>
+              <h2 className="text-base font-semibold text-text">Business information</h2>
+              <p className="mt-1 text-sm text-text-secondary">
+                These values are saved to your account.
               </p>
             </div>
 
-            <div className="mt-6 flex justify-end">
-              <Button
-                type="button"
-                rightIcon={<ArrowRight className="size-4" />}
-                onClick={() => setStep(1)}
-              >
-                Continue
-              </Button>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-text">Company name</span>
+                <input
+                  {...register("companyName")}
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                />
+                {errors.companyName && (
+                  <span className="text-xs text-danger">{errors.companyName.message}</span>
+                )}
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-text">Industry</span>
+                <input
+                  {...register("industry")}
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                />
+                {errors.industry && (
+                  <span className="text-xs text-danger">{errors.industry.message}</span>
+                )}
+              </label>
+
+              <label className="space-y-2 sm:col-span-2">
+                <span className="text-sm font-medium text-text">Brand tone</span>
+                <input
+                  {...register("brandTone")}
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                />
+                {errors.brandTone && (
+                  <span className="text-xs text-danger">{errors.brandTone.message}</span>
+                )}
+              </label>
             </div>
+          </section>
+
+          <section className="space-y-5 border-t border-border pt-6">
+            <div>
+              <h2 className="text-base font-semibold text-text">Your audience and positioning</h2>
+            </div>
+
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-text">Unique value proposition</span>
+              <textarea
+                {...register("uvp")}
+                rows={4}
+                className="w-full resize-y rounded-xl border border-border bg-background px-3 py-3 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              />
+              {errors.uvp && <span className="text-xs text-danger">{errors.uvp.message}</span>}
+            </label>
+
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-text">Target audience</span>
+              <textarea
+                {...register("targetAudience")}
+                rows={4}
+                className="w-full resize-y rounded-xl border border-border bg-background px-3 py-3 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+              />
+              {errors.targetAudience && (
+                <span className="text-xs text-danger">{errors.targetAudience.message}</span>
+              )}
+            </label>
+          </section>
+
+          <section className="border-t border-border pt-6">
+            <div>
+              <h2 className="text-base font-semibold text-text">Content platforms</h2>
+              <p className="mt-1 text-sm text-text-secondary">Select where you plan to publish.</p>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {ONBOARDING_PLATFORMS.map((platform) => {
+                const selected = platforms.includes(platform);
+
+                return (
+                  <button
+                    key={platform}
+                    type="button"
+                    onClick={() => togglePlatform(platform)}
+                    className={cn(
+                      "flex min-h-12 items-center justify-between rounded-xl border px-4 text-left text-sm font-medium transition",
+                      selected
+                        ? "border-primary bg-primary-soft text-primary"
+                        : "border-border bg-background text-text-secondary hover:border-border-strong hover:text-text",
+                    )}
+                  >
+                    {platformLabels[platform]}
+
+                    {selected && (
+                      <span className="flex size-5 items-center justify-center rounded-full bg-primary text-white">
+                        <Check className="size-3" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {errors.platforms && (
+              <p className="mt-2 text-xs text-danger">{errors.platforms.message}</p>
+            )}
+          </section>
+
+          {serverError && (
+            <div
+              role="alert"
+              className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger"
+            >
+              {serverError}
+            </div>
+          )}
+
+          <div className="flex justify-end border-t border-border pt-6">
+            <Button type="submit" size="lg" isLoading={onboarding.isPending}>
+              Complete setup
+            </Button>
           </div>
-        </section>
-      </Container>
-    </div>
+        </form>
+      </div>
+    </main>
   );
 }
