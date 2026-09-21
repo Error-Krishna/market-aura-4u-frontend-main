@@ -1,72 +1,61 @@
 import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/Button";
 import { useGenerateContent } from "@/features/content";
-import { ONBOARDING_PLATFORMS } from "@/features/onboarding";
-import { cn } from "@/lib/utils/cn";
-import { Check } from "lucide-react";
+import type { GeneratedContent } from "@/features/content/types/content.types";
 
 const schema = z.object({
-  prompt: z.string().min(10, "Please provide at least 10 characters."),
-  platforms: z.array(z.string()).min(1, "Select at least one platform."),
+  prompt: z.string().min(5, "Please provide at least 5 characters."),
 });
 
 type FormData = z.infer<typeof schema>;
 
 export default function CreateContentPage() {
-  const [result, setResult] = useState<Record<string, string> | null>(null);
+  const [result, setResult] = useState<GeneratedContent | null>(null);
+
   const generate = useGenerateContent();
 
   const {
     register,
     handleSubmit,
-    control,
-    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { platforms: [] },
+    defaultValues: {
+      prompt: "",
+    },
   });
-
-  const selectedPlatforms = useWatch({
-    control,
-    name: "platforms",
-  });
-
-  const togglePlatform = (platform: string) => {
-    const current = selectedPlatforms || [];
-    const next = current.includes(platform)
-      ? current.filter((p) => p !== platform)
-      : [...current, platform];
-
-    setValue("platforms", next, { shouldValidate: true });
-  };
 
   const onSubmit = async (data: FormData) => {
     const response = await generate.mutateAsync({
       prompt: data.prompt,
-      platforms: data.platforms,
     });
 
-    setResult(response.generatedContent);
+    setResult(response.job.generatedContent ?? null);
   };
 
   return (
     <div className="max-w-4xl space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Create Content</h1>
+
         <p className="mt-1 text-text-secondary">
-          Describe what you want to create and select platforms.
+          Describe what you want to create. Content will be generated for the platforms selected
+          during onboarding.
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="mb-2 block text-sm font-medium">Your Idea / Prompt</label>
+          <label htmlFor="prompt" className="mb-2 block text-sm font-medium">
+            Your Idea / Prompt
+          </label>
 
           <textarea
+            id="prompt"
             {...register("prompt")}
             rows={5}
             className="w-full rounded-2xl border border-border/50 bg-surface/30 p-4 text-sm backdrop-blur-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
@@ -76,81 +65,66 @@ export default function CreateContentPage() {
           {errors.prompt && <p className="mt-1 text-sm text-danger">{errors.prompt.message}</p>}
         </div>
 
-        <div>
-          <label className="mb-3 block text-sm font-medium">Select Platforms</label>
-
-          <div className="flex flex-wrap gap-3">
-            {ONBOARDING_PLATFORMS.map((platform) => {
-              const selected = selectedPlatforms?.includes(platform) || false;
-
-              return (
-                <button
-                  key={platform}
-                  type="button"
-                  onClick={() => togglePlatform(platform)}
-                  className={cn(
-                    "flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition",
-                    selected
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border/50 bg-surface/20 text-text-secondary hover:bg-surface/40",
-                  )}
-                >
-                  {selected && <Check className="size-4" />}
-
-                  {platform.charAt(0).toUpperCase() + platform.slice(1)}
-                </button>
-              );
-            })}
-          </div>
-
-          {errors.platforms && (
-            <p className="mt-1 text-sm text-danger">{errors.platforms.message}</p>
-          )}
-        </div>
-
         <Button type="submit" size="lg" isLoading={generate.isPending}>
           Generate Content
         </Button>
       </form>
 
+      {generate.isError && (
+        <div className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
+          {generate.error instanceof Error ? generate.error.message : "Failed to generate content."}
+        </div>
+      )}
+
       {generate.isSuccess && result && (
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold">Generated Content</h2>
 
-          <div className="space-y-6">
-            {Object.entries(result).map(([platform, content]) => (
-              <div
-                key={platform}
-                className="glass-card rounded-2xl bg-surface/30 p-6 backdrop-blur-sm"
-              >
-                <h3 className="mb-2 text-lg font-medium capitalize">{platform}</h3>
+          {result.twitter?.map((post, index) => (
+            <ContentCard key={`twitter-${index}`} platform="Twitter / X" content={post.text} />
+          ))}
 
-                <p className="whitespace-pre-wrap text-text-secondary">{content}</p>
+          {result.linkedin?.map((post, index) => (
+            <ContentCard key={`linkedin-${index}`} platform="LinkedIn" content={post} />
+          ))}
 
-                <div className="mt-4 flex gap-3">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => {
-                      alert(`Publishing to ${platform}...`);
-                    }}
-                  >
-                    Publish
-                  </Button>
+          {result.blog?.map((post, index) => (
+            <ContentCard key={`blog-${index}`} platform="Blog" content={post} />
+          ))}
 
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => navigator.clipboard.writeText(content)}
-                  >
-                    Copy
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+          {result.instagram && (
+            <ContentCard platform="Instagram" content={result.instagram.caption} />
+          )}
+
+          {result.email && (
+            <ContentCard
+              platform="Email"
+              content={`${result.email.subject}\n\n${result.email.body}`}
+            />
+          )}
         </div>
       )}
+    </div>
+  );
+}
+
+interface ContentCardProps {
+  platform: string;
+  content: string;
+}
+
+function ContentCard({ platform, content }: ContentCardProps) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface/30 p-6 backdrop-blur-sm">
+      <h3 className="mb-3 text-lg font-medium">{platform}</h3>
+
+      <p className="whitespace-pre-wrap text-text-secondary">{content}</p>
+
+      <div className="mt-4">
+        <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(content)}>
+          Copy
+        </Button>
+      </div>
     </div>
   );
 }

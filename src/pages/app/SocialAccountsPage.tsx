@@ -69,7 +69,7 @@ export default function SocialAccountsPage() {
             </Button>
           ) : (
             <a
-              href={`http://localhost:5000/api/v1/auth/instagram/login?userId=${userId}`}
+              href={`http://localhost:8000/api/v1/auth/instagram/login?userId=${userId}`}
               className="inline-flex items-center gap-2 rounded-xl bg-secondary px-6 py-3 text-sm font-semibold text-background shadow-lg shadow-secondary/20 transition hover:shadow-secondary/30 hover:scale-[1.02] active:scale-[0.98]"
             >
               <Link2 className="mr-2 size-4" />

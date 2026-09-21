@@ -17,34 +17,37 @@ export default function ContentHistoryPage() {
     return <p className="text-danger">Failed to load history.</p>;
   }
 
-  const items = data?.data || [];
+  const items = data?.jobs ?? [];
 
   return (
     <div className="max-w-4xl space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Content History</h1>
+
         <p className="mt-1 text-text-secondary">All your generated content in one place.</p>
       </div>
 
       {items.length === 0 ? (
-        <div className="glass-card rounded-2xl p-12 text-center text-text-secondary">
+        <div className="rounded-2xl border border-border bg-surface/30 p-12 text-center text-text-secondary">
           <p>You haven't generated any content yet.</p>
+
           <p className="mt-2">Head to "Create Content" to get started.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {items.map((item) => (
-            <div
-              key={item.id}
-              className="glass-card rounded-2xl bg-surface/30 p-6 backdrop-blur-sm"
-            >
+            <div key={item.id} className="rounded-2xl border border-border bg-surface/30 p-6">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="space-y-1">
+                <div className="min-w-0 space-y-1">
                   <p className="text-sm text-text-muted">
-                    {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(item.createdAt), {
+                      addSuffix: true,
+                    })}
                   </p>
-                  <p className="font-medium line-clamp-1">{item.originalContent}</p>
+
+                  <p className="line-clamp-1 font-medium">{item.originalContent}</p>
                 </div>
+
                 <span
                   className={cn(
                     "rounded-full px-3 py-1 text-xs font-medium",
@@ -56,16 +59,21 @@ export default function ContentHistoryPage() {
                   {item.status}
                 </span>
               </div>
+
               <div className="mt-4 flex flex-wrap gap-2">
-                {item.platforms.map((p) => (
+                {item.platforms.map((platform) => (
                   <span
-                    key={p}
+                    key={platform}
                     className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
                   >
-                    {p}
+                    {platform}
                   </span>
                 ))}
               </div>
+
+              {item.status === "failed" && item.error && (
+                <p className="mt-4 text-sm text-danger">{item.error}</p>
+              )}
             </div>
           ))}
         </div>

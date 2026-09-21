@@ -1,29 +1,39 @@
 import { apiClient } from "@/lib/api/client";
+
 import type {
+  ContentHistoryResponse,
   GenerateContentRequest,
   GenerateContentResponse,
   PublishContentRequest,
   PublishContentResponse,
-  ContentHistoryResponse,
 } from "../types/content.types";
 
-const BASE = "/v1/content";
+const CONTENT_BASE_PATH = "/v1/content";
 
 export async function generateContent(
   request: GenerateContentRequest,
 ): Promise<GenerateContentResponse> {
-  const res = await apiClient.post<GenerateContentResponse>(`${BASE}/generate`, request);
-  return res.data;
+  const response = await apiClient.post<GenerateContentResponse>(
+    `${CONTENT_BASE_PATH}/generate`,
+    request,
+  );
+
+  return response.data;
+}
+
+export async function getContentHistory(): Promise<ContentHistoryResponse> {
+  const response = await apiClient.get<ContentHistoryResponse>(`${CONTENT_BASE_PATH}/history`);
+
+  return response.data;
 }
 
 export async function publishContent(
   request: PublishContentRequest,
 ): Promise<PublishContentResponse> {
-  const res = await apiClient.post<PublishContentResponse>(`${BASE}/publish`, request);
-  return res.data;
-}
+  const response = await apiClient.post<PublishContentResponse>(
+    `${CONTENT_BASE_PATH}/publish`,
+    request,
+  );
 
-export async function getContentHistory(): Promise<ContentHistoryResponse> {
-  const res = await apiClient.get<ContentHistoryResponse>(`${BASE}/history`);
-  return res.data;
+  return response.data;
 }

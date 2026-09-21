@@ -19,9 +19,29 @@ export interface OnboardingRequest {
 }
 
 export interface OnboardingResponse {
+  success: boolean;
   message: string;
-  status: number;
-  data: {
+  user: {
+    id: string;
+    name?: string;
+    email: string;
     onboardingCompleted: boolean;
+    isPremium: boolean;
+    credits: {
+      monthly: number;
+      used: number;
+    };
+    brandProfile: {
+      companyName: string;
+      industry: string;
+      uvp: string;
+      targetAudience: string;
+      marketingGoal: string;
+      brandVoice: {
+        tone: string;
+        description: string;
+      };
+      platforms: OnboardingPlatform[];
+    };
   };
 }
