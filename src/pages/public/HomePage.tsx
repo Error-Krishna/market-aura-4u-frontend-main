@@ -19,7 +19,7 @@ const features = [
   },
   {
     icon: Zap,
-    title: "Create and publish",
+    title: "Create and copy",
     description: "Move from idea to ready‑to‑use content through one focused workflow.",
   },
 ];
@@ -27,7 +27,7 @@ const features = [
 const workflow = [
   "Tell us about your business",
   "Choose what you want to create",
-  "Generate, review, and publish",
+  "Generate, review, and copy",
 ];
 
 export default function HomePage() {
