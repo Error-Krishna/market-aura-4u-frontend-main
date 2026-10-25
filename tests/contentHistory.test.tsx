@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import ContentHistoryPage from "../src/pages/app/ContentHistoryPage";
 
 const historyHooks = vi.hoisted(() => ({ useContentHistory: vi.fn(), fetchNextPage: vi.fn() }));
@@ -38,7 +38,7 @@ test("history renders saved content, carousel slides, and available ML recommend
               createdAt: "2026-10-01T12:00:00.000Z",
               generatedContent: {
                 instagram: {
-                  caption: "A saved launch caption",
+                  caption: "A saved launch caption #creators",
                   content_type: "carousel",
                   slides: [{ slide_number: 1, headline: "Meet us", body: "Made for creators." }],
                 },
@@ -47,7 +47,7 @@ test("history renders saved content, carousel slides, and available ML recommend
                   recommendation: {
                     recommended_content_type: { value: "carousel" },
                     predicted_engagement: { value: 0.08 },
-                    recommended_hashtags: ["#creators"],
+                    recommended_hashtags: ["#creators", "#makeuponpoint"],
                   },
                 },
               },
@@ -60,11 +60,14 @@ test("history renders saved content, carousel slides, and available ML recommend
 
   render(<ContentHistoryPage />);
   expect(screen.getByText("Launch our product")).toBeTruthy();
-  expect(screen.getByText("A saved launch caption")).toBeTruthy();
+  expect(screen.getByText("A saved launch caption #creators")).toBeTruthy();
   expect(screen.getByText("Meet us")).toBeTruthy();
   expect(screen.getByText("Made for creators.")).toBeTruthy();
   expect(screen.getByText("8.00%")).toBeTruthy();
-  expect(screen.getByText("#creators")).toBeTruthy();
+  const guidance = screen.getByRole("region", { name: "ML recommendation grounding" });
+  expect(within(guidance).queryByText("Suggested hashtags")).toBeNull();
+  expect(within(guidance).queryByText(/#creators|#makeuponpoint/)).toBeNull();
+  expect(screen.queryByText("#makeuponpoint")).toBeNull();
 });
 
 test("legacy content without grounding metadata remains readable", () => {

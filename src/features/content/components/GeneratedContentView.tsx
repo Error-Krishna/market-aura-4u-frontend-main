@@ -94,9 +94,6 @@ function GroundingCard({ grounding }: { grounding: GroundingMetadata }) {
   const predictedLikes = isRecord(recommendation?.engagement_prediction)
     ? recommendation.engagement_prediction.predicted_likes
     : undefined;
-  const hashtags = Array.isArray(recommendation?.recommended_hashtags)
-    ? recommendation.recommended_hashtags.filter((tag): tag is string => typeof tag === "string")
-    : [];
   const reason = safeString(grounding.reason);
 
   return (
@@ -132,16 +129,6 @@ function GroundingCard({ grounding }: { grounding: GroundingMetadata }) {
             <div>
               <dt className="font-medium">Estimated likes</dt>
               <dd className="text-text-secondary">{predictedLikes}</dd>
-            </div>
-          )}
-          {hashtags.length > 0 && (
-            <div className="sm:col-span-2">
-              <dt className="font-medium">Suggested hashtags</dt>
-              <dd className="mt-1 flex flex-wrap gap-2 text-text-secondary">
-                {hashtags.map((tag, index) => (
-                  <span key={`${tag}-${index}`}>{tag}</span>
-                ))}
-              </dd>
             </div>
           )}
         </dl>
