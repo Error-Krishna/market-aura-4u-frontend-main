@@ -6,5 +6,6 @@ import type { GenerateContentRequest } from "../types/content.types";
 export function useGenerateContent() {
   return useMutation({
     mutationFn: (request: GenerateContentRequest) => generateContent(request),
+    retry: 0,
   });
 }

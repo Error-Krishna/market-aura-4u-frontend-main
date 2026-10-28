@@ -21,8 +21,12 @@ export async function generateContent(
   return response.data;
 }
 
-export async function getContentHistory(): Promise<ContentHistoryResponse> {
-  const response = await apiClient.get<ContentHistoryResponse>(`${CONTENT_BASE_PATH}/history`);
+export async function getContentHistory(
+  params: { limit?: number; cursor?: string } = {},
+): Promise<ContentHistoryResponse> {
+  const response = await apiClient.get<ContentHistoryResponse>(`${CONTENT_BASE_PATH}/history`, {
+    params,
+  });
 
   return response.data;
 }

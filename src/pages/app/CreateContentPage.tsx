@@ -5,6 +5,8 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/Button";
 import { useGenerateContent } from "@/features/content";
+import { GeneratedContentView } from "@/features/content/components/GeneratedContentView";
+import { generationErrorMessage } from "@/features/content/api/generation-error";
 import type { GeneratedContent } from "@/features/content/types/content.types";
 
 const schema = z.object({
@@ -30,11 +32,15 @@ export default function CreateContentPage() {
   });
 
   const onSubmit = async (data: FormData) => {
-    const response = await generate.mutateAsync({
-      prompt: data.prompt,
-    });
-
-    setResult(response.job.generatedContent ?? null);
+    try {
+      const response = await generate.mutateAsync({
+        prompt: data.prompt,
+      });
+      setResult(response.job.generatedContent ?? null);
+    } catch {
+      // React Query retains the error for the alert below. Keep the prompt and
+      // consume the rejected promise; retrying must be an explicit user action.
+    }
   };
 
   return (
@@ -71,60 +77,20 @@ export default function CreateContentPage() {
       </form>
 
       {generate.isError && (
-        <div className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
-          {generate.error instanceof Error ? generate.error.message : "Failed to generate content."}
+        <div
+          role="alert"
+          className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger"
+        >
+          {generationErrorMessage(generate.error)}
         </div>
       )}
 
       {generate.isSuccess && result && (
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold">Generated Content</h2>
-
-          {result.twitter?.map((post, index) => (
-            <ContentCard key={`twitter-${index}`} platform="Twitter / X" content={post.text} />
-          ))}
-
-          {result.linkedin?.map((post, index) => (
-            <ContentCard key={`linkedin-${index}`} platform="LinkedIn" content={post} />
-          ))}
-
-          {result.blog?.map((post, index) => (
-            <ContentCard key={`blog-${index}`} platform="Blog" content={post} />
-          ))}
-
-          {result.instagram && (
-            <ContentCard platform="Instagram" content={result.instagram.caption} />
-          )}
-
-          {result.email && (
-            <ContentCard
-              platform="Email"
-              content={`${result.email.subject}\n\n${result.email.body}`}
-            />
-          )}
+          <GeneratedContentView content={result} />
         </div>
       )}
-    </div>
-  );
-}
-
-interface ContentCardProps {
-  platform: string;
-  content: string;
-}
-
-function ContentCard({ platform, content }: ContentCardProps) {
-  return (
-    <div className="rounded-2xl border border-border bg-surface/30 p-6 backdrop-blur-sm">
-      <h3 className="mb-3 text-lg font-medium">{platform}</h3>
-
-      <p className="whitespace-pre-wrap text-text-secondary">{content}</p>
-
-      <div className="mt-4">
-        <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(content)}>
-          Copy
-        </Button>
-      </div>
     </div>
   );
 }

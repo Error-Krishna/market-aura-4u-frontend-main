@@ -1,4 +1,4 @@
-export type ContentPlatform = "twitter" | "linkedin" | "blog" | "instagram" | "email";
+export type ContentPlatform = "twitter" | "linkedin" | "facebook" | "blog" | "instagram" | "email";
 
 export type ContentJobStatus = "processing" | "completed" | "failed";
 
@@ -10,6 +10,14 @@ export interface TwitterContent {
 export interface InstagramContent {
   caption: string;
   image_url?: string;
+  content_type?: "image" | "carousel";
+  slides?: InstagramCarouselSlide[];
+}
+
+export interface InstagramCarouselSlide {
+  slide_number: number;
+  headline: string;
+  body: string;
 }
 
 export interface EmailContent {
@@ -17,13 +25,30 @@ export interface EmailContent {
   body: string;
 }
 
+export interface GroundingMetadata {
+  isGrounded: boolean;
+  recommendation?: GroundingRecommendation | null;
+  reason?: string;
+}
+
+export interface GroundingRecommendation {
+  recommended_content_type?: { value?: string; label?: string };
+  recommended_format?: string;
+  predicted_engagement?: { value?: number; label?: string };
+  engagement_prediction?: { predicted_likes?: number };
+  recommended_hashtags?: string[];
+  [key: string]: unknown;
+}
+
 export interface GeneratedContent {
   twitter?: TwitterContent[];
   linkedin?: string[];
+  facebook?: string[];
   blog?: string[];
   instagram?: InstagramContent;
   email?: EmailContent;
   imageUrl?: string;
+  grounding?: GroundingMetadata;
 }
 
 export interface GenerateContentRequest {
@@ -53,6 +78,11 @@ export interface ContentHistoryResponse {
   success: boolean;
   count: number;
   jobs: ContentJob[];
+  pagination?: {
+    limit: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+  };
 }
 
 export interface PublishContentRequest {
