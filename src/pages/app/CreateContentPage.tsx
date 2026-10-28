@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { useGenerateContent } from "@/features/content";
 import { GeneratedContentView } from "@/features/content/components/GeneratedContentView";
+import { generationErrorMessage } from "@/features/content/api/generation-error";
 import type { GeneratedContent } from "@/features/content/types/content.types";
 
 const schema = z.object({
@@ -31,11 +32,15 @@ export default function CreateContentPage() {
   });
 
   const onSubmit = async (data: FormData) => {
-    const response = await generate.mutateAsync({
-      prompt: data.prompt,
-    });
-
-    setResult(response.job.generatedContent ?? null);
+    try {
+      const response = await generate.mutateAsync({
+        prompt: data.prompt,
+      });
+      setResult(response.job.generatedContent ?? null);
+    } catch {
+      // React Query retains the error for the alert below. Keep the prompt and
+      // consume the rejected promise; retrying must be an explicit user action.
+    }
   };
 
   return (
@@ -72,8 +77,11 @@ export default function CreateContentPage() {
       </form>
 
       {generate.isError && (
-        <div className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
-          {generate.error instanceof Error ? generate.error.message : "Failed to generate content."}
+        <div
+          role="alert"
+          className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger"
+        >
+          {generationErrorMessage(generate.error)}
         </div>
       )}
 
