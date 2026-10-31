@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useOnboarding } from "@/features/onboarding/hooks/use-onboarding";
 import {
+  ONBOARDING_INDUSTRIES,
   ONBOARDING_PLATFORMS,
+  type OnboardingIndustry,
   type OnboardingPlatform,
 } from "@/features/onboarding/types/onboarding.types";
 import {
@@ -42,7 +44,7 @@ export default function OnboardingPage() {
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
       companyName: "",
-      industry: "",
+      industry: "" as unknown as OnboardingIndustry,
       brandTone: "Professional",
       uvp: "",
       targetAudience: "",
@@ -124,11 +126,19 @@ export default function OnboardingPage() {
               <label className="space-y-2">
                 <span className="text-sm font-medium text-text">Industry</span>
 
-                <input
+                <select
                   {...register("industry")}
-                  placeholder="SaaS, E-commerce, Manufacturing..."
                   className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-                />
+                >
+                  <option value="" disabled>
+                    Select an industry
+                  </option>
+                  {ONBOARDING_INDUSTRIES.map((industry) => (
+                    <option key={industry} value={industry}>
+                      {industry}
+                    </option>
+                  ))}
+                </select>
 
                 {errors.industry && (
                   <span className="text-xs text-danger">{errors.industry.message}</span>

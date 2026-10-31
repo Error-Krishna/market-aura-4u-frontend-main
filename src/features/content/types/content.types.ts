@@ -31,11 +31,19 @@ export interface GroundingMetadata {
   reason?: string;
 }
 
+export interface RecommendedPostingTime {
+  day?: string;
+  start?: string;
+  end?: string;
+  timezone?: string;
+}
+
 export interface GroundingRecommendation {
   recommended_content_type?: { value?: string; label?: string };
   recommended_format?: string;
   predicted_engagement?: { value?: number; label?: string };
   engagement_prediction?: { predicted_likes?: number };
+  recommended_posting_time?: RecommendedPostingTime | string;
   recommended_hashtags?: string[];
   [key: string]: unknown;
 }

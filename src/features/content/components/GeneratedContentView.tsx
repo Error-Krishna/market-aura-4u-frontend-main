@@ -88,6 +88,7 @@ function GroundingCard({ grounding }: { grounding: GroundingMetadata }) {
   const contentType =
     nestedString(recommendation?.recommended_content_type, "value") ??
     safeString(recommendation?.recommended_format);
+  const postingTime = formatPostingTime(recommendation?.recommended_posting_time);
   const engagement = isRecord(recommendation?.predicted_engagement)
     ? recommendation.predicted_engagement
     : null;
@@ -116,6 +117,12 @@ function GroundingCard({ grounding }: { grounding: GroundingMetadata }) {
               <dd className="text-text-secondary">{contentType}</dd>
             </div>
           )}
+          {postingTime && (
+            <div>
+              <dt className="font-medium">Recommended posting time</dt>
+              <dd className="text-text-secondary">{postingTime}</dd>
+            </div>
+          )}
           {typeof engagement?.value === "number" && Number.isFinite(engagement.value) && (
             <div>
               <dt className="font-medium">Estimated engagement</dt>
@@ -139,6 +146,27 @@ function GroundingCard({ grounding }: { grounding: GroundingMetadata }) {
       )}
     </section>
   );
+}
+
+function formatPostingTime(value: unknown): string | undefined {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (isRecord(value)) {
+    const day = safeString(value.day);
+    const start = safeString(value.start);
+    const end = safeString(value.end);
+    const timezone = safeString(value.timezone);
+    const parts: string[] = [];
+    if (day) parts.push(day);
+    if (start && end) {
+      parts.push(`${start} – ${end}`);
+    } else if (start) {
+      parts.push(start);
+    }
+    if (parts.length === 0) return undefined;
+    const timeText = parts.join(", ");
+    return timezone ? `${timeText} (${timezone})` : timeText;
+  }
+  return undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

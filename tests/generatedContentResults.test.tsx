@@ -60,6 +60,12 @@ test("generated results show ML recommendation details and Instagram carousel sl
       recommendation: {
         recommended_content_type: { value: "carousel" },
         predicted_engagement: { value: 0.125, label: "Estimated" },
+        recommended_posting_time: {
+          day: "Thursday",
+          start: "06:00",
+          end: "07:00",
+          timezone: "UTC",
+        },
         recommended_hashtags: ["#launch", "#smallbusiness"],
       },
     },
@@ -67,6 +73,9 @@ test("generated results show ML recommendation details and Instagram carousel sl
 
   expect(screen.getByText("This content was guided by the ML recommender.")).toBeTruthy();
   expect(screen.getByText("Suggested format").parentElement?.textContent).toContain("carousel");
+  expect(screen.getByText("Recommended posting time").parentElement?.textContent).toContain(
+    "Thursday, 06:00 – 07:00 (UTC)",
+  );
   expect(screen.getByText("12.50% (Estimated)")).toBeTruthy();
   const guidance = screen.getByRole("region", { name: "ML recommendation grounding" });
   expect(within(guidance).queryByText("Suggested hashtags")).toBeNull();

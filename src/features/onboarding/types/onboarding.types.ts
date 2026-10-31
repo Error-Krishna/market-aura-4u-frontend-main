@@ -9,6 +9,19 @@ export const ONBOARDING_PLATFORMS = [
 
 export type OnboardingPlatform = (typeof ONBOARDING_PLATFORMS)[number];
 
+export const ONBOARDING_INDUSTRIES = [
+  "Beauty",
+  "Family",
+  "Fashion",
+  "Fitness",
+  "Food",
+  "Interior",
+  "Pet",
+  "Travel",
+] as const;
+
+export type OnboardingIndustry = (typeof ONBOARDING_INDUSTRIES)[number];
+
 export interface OnboardingRequest {
   companyName: string;
   industry: string;
